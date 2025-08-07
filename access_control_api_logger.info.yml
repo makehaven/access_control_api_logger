@@ -1,0 +1,10 @@
+name: 'Access Control API and Logger'
+type: module
+description: 'Creates API endpoint and logs access control requests.'
+package: Custom
+core_version_requirement: ^10
+dependencies:
+  - drupal:user
+  - drupal:views
+  - drupal:eck
+  - drupal:profile

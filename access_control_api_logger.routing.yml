@@ -1,0 +1,65 @@
+access_control_api_logger.uuid_permission:
+  path: '/api/v0/uuid/{uuid}/permission/{permission_id}'
+  defaults:
+    _controller: '\Drupal\access_control_api_logger\Controller\AccessControlApiLoggerController::handleRequest'
+    _title: 'Access Control API Logger'
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+access_control_api_logger.serial_permission:
+  path: '/api/v0/serial/{serial}/permission/{permission_id}'
+  defaults:
+    _controller: '\Drupal\access_control_api_logger\Controller\AccessControlApiLoggerController::handleSerialRequest'
+    _title: 'Access Control API Logger by Serial'
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+access_control_api_logger.list_all_permissions:
+  path: '/api/v0/permissions/list'
+  defaults:
+    _controller: '\Drupal\access_control_api_logger\Controller\AccessControlApiLoggerController::listAllPermissions'
+    _title: 'List All Permissions'
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+access_control_api_logger.get_user_info_by_serial:
+  path: '/api/v0/serial/{serial}/user'
+  defaults:
+    _controller: '\Drupal\access_control_api_logger\Controller\AccessControlApiLoggerController::getUserInfoBySerial'
+    _title: 'Get User Info by Serial'
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+access_control_api_logger.get_user_info_by_uuid:
+  path: '/api/v0/uuid/{uuid}/user'
+  defaults:
+    _controller: '\Drupal\access_control_api_logger\Controller\AccessControlApiLoggerController::getUserInfoByUuid'
+    _title: 'Get User Info by UUID'
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+access_control_api_logger.settings_form:
+  path: '/admin/config/system/access-control-api-logger'
+  defaults:
+    _form: '\Drupal\access_control_api_logger\Form\AccessControlApiLoggerSettingsForm'
+    _title: 'Access Control Logger Settings'
+  requirements:
+    _permission: 'administer site configuration'
+access_control_api_logger.email_permission:
+  path: '/api/v0/email/{email}/permission/{permission_id}'
+  defaults:
+    _controller: '\Drupal\access_control_api_logger\Controller\AccessControlApiLoggerController::handleEmailRequest'
+    _title: 'Access Control API Logger by Email'
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: 'TRUE'

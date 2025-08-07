@@ -1,0 +1,6 @@
+access_control_api_logger.settings:
+  title: 'Access Control Logger Settings'
+  description: 'Configure settings for Access Control API Logger.'
+  parent: system.admin_config_system
+  route_name: access_control_api_logger.settings_form
+  weight: 100

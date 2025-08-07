@@ -1,0 +1,6 @@
+{
+    "name": "makehaven/access_control_api_logger",
+    "type": "drupal-custom-module",
+    "description": "Creates API endpoint and logs access control requests.",
+    "license": "GPL-2.0-or-later"
+}
