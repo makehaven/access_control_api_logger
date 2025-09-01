@@ -24,6 +24,10 @@ class AccessControlApiLoggerController extends ControllerBase {
    * Handles access control request logging by serial number.
    */
   public function handleSerialRequest($serial, $permission_id, Request $request) {
+    // \Drupal::logger('access_control_api_logger')->notice('Received serial request for Serial: @serial and Permission ID: @permission_id', [
+    //   '@serial' => $serial,
+    //   '@permission_id' => $permission_id,
+    // ]);
     return $this->logAccessRequest($serial, $permission_id, 'serial', $request);
   }
 
@@ -31,6 +35,10 @@ class AccessControlApiLoggerController extends ControllerBase {
    * Handles access control request logging by email.
    */
   public function handleEmailRequest($email, $permission_id, Request $request) {
+    // \Drupal::logger('access_control_api_logger')->notice('Received email request for Email: @email and Permission ID: @permission_id', [
+    //   '@email' => $email,
+    //   '@permission_id' => $permission_id,
+    // ]);
     return $this->logAccessRequest($email, $permission_id, 'email', $request);
   }
 
@@ -42,9 +50,15 @@ class AccessControlApiLoggerController extends ControllerBase {
 
     $check_user_exists = $config->get('check_user_exists') !== NULL ? (bool) $config->get('check_user_exists') : TRUE;
     $check_user_status = $config->get('check_user_status') !== NULL ? (bool) $config->get('check_user_status') : TRUE;
+    // $check_badge_status is now $check_badge_status_explicitly_enabled later in the code.
+    // The general $config->get('check_badge_status') is used directly.
 
     $source = $request->query->get('source', 'unknown');
+    // \Drupal::logger('access_control_api_logger')->notice('Source parameter: @source', ['@source' => $source]);
+
     $method = $request->query->get('method', 'unknown');
+    // \Drupal::logger('access_control_api_logger')->notice('Method parameter: @method', ['@method' => $method]);
+
     $user_supplied_note = $request->query->get('note', '');
 
     $combine_notes = function ($system_note, $user_note) {
@@ -63,6 +77,7 @@ class AccessControlApiLoggerController extends ControllerBase {
         $users = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties(['uuid' => $identifier]);
         $user = reset($users);
         if (!$user) {
+          \Drupal::logger('access_control_api_logger')->error('No user found for UUID: @uuid', ['@uuid' => $identifier]);
           $final_note = $combine_notes('No user found.', $user_supplied_note);
           $this->logAccessControlRequest(NULL, NULL, FALSE, $final_note, $source, $method);
           return new JsonResponse(['error' => 'No matching user found.'], 404);
@@ -71,6 +86,7 @@ class AccessControlApiLoggerController extends ControllerBase {
       elseif ($type === 'serial') {
         $user = $this->getUserBySerial($identifier);
         if (!$user) {
+          \Drupal::logger('access_control_api_logger')->error('No user found for Serial: @serial', ['@serial' => $identifier]);
           $final_note = $combine_notes('No user found.', $user_supplied_note);
           $this->logAccessControlRequest(NULL, NULL, FALSE, $final_note, $source, $method);
           return new JsonResponse(['error' => 'No matching user found.'], 404);
@@ -80,13 +96,16 @@ class AccessControlApiLoggerController extends ControllerBase {
         $users = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties(['mail' => $identifier]);
         $user = reset($users);
         if (!$user) {
+          \Drupal::logger('access_control_api_logger')->error('No user found for Email: @email', ['@email' => $identifier]);
           $final_note = $combine_notes('No user found.', $user_supplied_note);
           $this->logAccessControlRequest(NULL, NULL, FALSE, $final_note, $source, $method);
           return new JsonResponse(['error' => 'No matching user found.'], 404);
         }
       }
       else {
+        \Drupal::logger('access_control_api_logger')->error('Invalid identifier type: @type', ['@type' => $type]);
         $final_note = $combine_notes('Invalid identifier type.', $user_supplied_note);
+        // No call to logAccessControlRequest here, as it would be for a non-existent user/badge.
         return new JsonResponse(['error' => 'Invalid identifier type.'], 400);
       }
     }
@@ -127,6 +146,7 @@ class AccessControlApiLoggerController extends ControllerBase {
       }
     }
 
+    // \Drupal::logger('access_control_api_logger')->notice('Checking if permission exists...');
     $badge = NULL;
     $requested_permission = $permission_id ? strtolower(trim($permission_id)) : '';
     $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties(['vid' => 'badges']);
@@ -139,6 +159,10 @@ class AccessControlApiLoggerController extends ControllerBase {
     }
 
     if (!$badge) {
+      \Drupal::logger('access_control_api_logger')->error('Invalid permission ID: "@permission_id" requested. User context: @user_id', [
+          '@permission_id' => $permission_id,
+          '@user_id' => $user ? $user->id() : ($check_user_exists ? 'user_not_found_or_disabled_check' : 'user_check_disabled'),
+      ]);
       $final_note = $combine_notes('Invalid permission ID.', $user_supplied_note);
       $this->logAccessControlRequest($user, NULL, FALSE, $final_note, $source, $method);
       return new JsonResponse(['error' => 'Invalid permission ID.'], 400);
@@ -204,13 +228,27 @@ class AccessControlApiLoggerController extends ControllerBase {
       $log_entry->set('field_access_request_method', $method);
     }
 
+    // VERBOSE LOG REMOVED FOR PRODUCTION
+    // \Drupal::logger('access_control_api_logger')->notice('Logging access control request: User ID = @uid, Badge = @badge, Result = @result, Note = @note, Source = @source, Method = @method', [
+    //   '@uid' => $user ? $user->id() : 'NULL',
+    //   '@badge' => $badge ? $badge->id() : 'NULL',
+    //   '@result' => $result ? 'Success' : 'Failure',
+    //   '@note' => $note,
+    //   '@source' => $source,
+    //   '@method' => $method,
+    // ]);
+
     $log_entry->save();
+
+    // VERBOSE LOG REMOVED FOR PRODUCTION
+    // \Drupal::logger('access_control_api_logger')->notice('Access control log entry saved successfully.');
   }
 
   /**
    * Helper function to find a user by serial number.
    */
   protected function getUserBySerial($serial) {
+    // ... (getUserBySerial method remains the same) ...
     $user_query = \Drupal::entityQuery('user')
       ->condition('field_card_serial_number', $serial)
       ->accessCheck(FALSE);
@@ -243,6 +281,7 @@ class AccessControlApiLoggerController extends ControllerBase {
    * Lists all active permissions.
    */
   public function listAllPermissions() {
+    // ... (listAllPermissions method remains the same) ...
     $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties(['vid' => 'badges']);
     if (empty($terms)) {
       return new JsonResponse(['error' => 'No permissions found.'], 404);
@@ -261,6 +300,7 @@ class AccessControlApiLoggerController extends ControllerBase {
    * Gets user info by serial number.
    */
   public function getUserInfoBySerial($serial) {
+    // ... (getUserInfoBySerial method remains the same) ...
     $user = $this->getUserBySerial($serial);
     if (!$user) {
       return new JsonResponse(['error' => 'User not found for serial.'], 404);
@@ -277,6 +317,7 @@ class AccessControlApiLoggerController extends ControllerBase {
    * Gets user info by UUID.
    */
   public function getUserInfoByUuid($uuid) {
+    // ... (getUserInfoByUuid method remains the same) ...
     $users = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties(['uuid' => $uuid]);
     $user = reset($users);
     if (!$user) {
