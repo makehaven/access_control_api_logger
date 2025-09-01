@@ -1,0 +1,23 @@
+uuid: f7e77249-014f-488d-bca0-11b9bc4a7e76
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_badge_status
+    - node.type.badge_request
+  module:
+    - options
+id: node.badge_request.field_badge_status
+field_name: field_badge_status
+entity_type: node
+bundle: badge_request
+label: 'Badge Status'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: active
+default_value_callback: ''
+settings: {  }
+field_type: list_string

@@ -1,0 +1,19 @@
+uuid: 87aeac44-e272-4412-9747-d5edc636f58f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.profile.field_card_serial_retired
+    - profile.type.main
+id: profile.main.field_card_serial_retired
+field_name: field_card_serial_retired
+entity_type: profile
+bundle: main
+label: 'card serial retired'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

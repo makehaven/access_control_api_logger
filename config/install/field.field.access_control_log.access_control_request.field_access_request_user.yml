@@ -1,0 +1,25 @@
+uuid: b9953860-9402-4017-ab63-d7a703c18ab9
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.access_control_log.access_control_request
+    - field.storage.access_control_log.field_access_request_user
+id: access_control_log.access_control_request.field_access_request_user
+field_name: field_access_request_user
+entity_type: access_control_log
+bundle: access_control_request
+label: 'Access Request User'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: views
+  handler_settings:
+    view:
+      view_name: access_control_user_by_uuid_lookup
+      display_name: entity_reference_1
+      arguments: {  }
+field_type: entity_reference

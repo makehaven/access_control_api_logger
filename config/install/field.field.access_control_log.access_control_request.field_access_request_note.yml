@@ -1,0 +1,19 @@
+uuid: d5090e38-ef84-4c21-8f85-f49d1972dea1
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.access_control_log.access_control_request
+    - field.storage.access_control_log.field_access_request_note
+id: access_control_log.access_control_request.field_access_request_note
+field_name: field_access_request_note
+entity_type: access_control_log
+bundle: access_control_request
+label: 'Access Request Note'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

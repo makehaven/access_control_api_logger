@@ -1,0 +1,25 @@
+uuid: 4627b212-faa7-41a2-9bd6-a5f4a98f20a9
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.access_control_log.access_control_request
+    - field.storage.access_control_log.field_access_request_permission
+id: access_control_log.access_control_request.field_access_request_permission
+field_name: field_access_request_permission
+entity_type: access_control_log
+bundle: access_control_request
+label: 'Access Request Permission'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: views
+  handler_settings:
+    view:
+      view_name: access_control_permission_lookup
+      display_name: entity_reference_1
+      arguments: {  }
+field_type: entity_reference

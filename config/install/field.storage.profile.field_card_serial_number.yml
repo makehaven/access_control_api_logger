@@ -1,0 +1,25 @@
+uuid: d32d5121-0837-41b0-9bdc-81ee6e07f17c
+langcode: und
+status: true
+dependencies:
+  module:
+    - field_permissions
+    - profile
+third_party_settings:
+  field_permissions:
+    permission_type: custom
+id: profile.field_card_serial_number
+field_name: field_card_serial_number
+entity_type: profile
+type: string
+settings:
+  max_length: 14
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

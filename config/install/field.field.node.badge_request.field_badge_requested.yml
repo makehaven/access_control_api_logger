@@ -1,0 +1,26 @@
+uuid: d0d1a5f1-dcf1-49a1-9113-4c2312e0deeb
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_badge_requested
+    - node.type.badge_request
+    - taxonomy.vocabulary.badges
+id: node.badge_request.field_badge_requested
+field_name: field_badge_requested
+entity_type: node
+bundle: badge_request
+label: Badge
+description: 'Badge to add to member'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      badges: badges
+    sort:
+      field: _none
+field_type: entity_reference

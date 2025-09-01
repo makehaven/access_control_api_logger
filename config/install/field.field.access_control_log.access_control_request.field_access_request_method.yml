@@ -1,0 +1,19 @@
+uuid: 6e156576-8908-4c33-89a6-fb5064b20182
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.access_control_log.access_control_request
+    - field.storage.access_control_log.field_access_request_method
+id: access_control_log.access_control_request.field_access_request_method
+field_name: field_access_request_method
+entity_type: access_control_log
+bundle: access_control_request
+label: 'Request Method '
+description: 'The way in which the request was made (example: qr_code, website, card_reader, computer )'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

@@ -4,7 +4,11 @@ description: 'Creates API endpoint and logs access control requests.'
 package: Custom
 core_version_requirement: ^10
 dependencies:
+  - drupal:node
+  - drupal:taxonomy
   - drupal:user
-  - drupal:views
-  - drupal:eck
+  - drupal:field
+  - drupal:text
+  - drupal:options
   - drupal:profile
+  - eck:eck

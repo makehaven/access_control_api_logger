@@ -1,0 +1,9 @@
+uuid: 31a22bed-d6e0-425c-a539-6b82e9d9081a
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.access_control_log
+name: 'Access Control Request'
+type: access_control_request
+description: ''

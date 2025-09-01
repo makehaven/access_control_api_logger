@@ -1,0 +1,19 @@
+uuid: 7739e199-54e2-43ae-a12a-6faf7bb1fe6e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_badge_text_id
+    - taxonomy.vocabulary.badges
+id: taxonomy_term.badges.field_badge_text_id
+field_name: field_badge_text_id
+entity_type: taxonomy_term
+bundle: badges
+label: badge_text_id
+description: 'ID used by system to identify tool. If blank uses title of tool.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

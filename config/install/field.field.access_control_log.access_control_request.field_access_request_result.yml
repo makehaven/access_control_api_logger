@@ -1,0 +1,21 @@
+uuid: 590ff566-c941-4b2e-aaa1-661dbe25358a
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.access_control_log.access_control_request
+    - field.storage.access_control_log.field_access_request_result
+id: access_control_log.access_control_request.field_access_request_result
+field_name: field_access_request_result
+entity_type: access_control_log
+bundle: access_control_request
+label: 'Access Control Request Result '
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  on_label: Approved
+  off_label: Denied
+field_type: boolean

@@ -1,0 +1,48 @@
+uuid: ff4bf632-8fae-4773-89f8-643d70010402
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_member_to_badge
+    - node.type.badge_request
+  module:
+    - epp
+third_party_settings:
+  epp:
+    value: '[current-page:query:uid]'
+    on_update: 0
+id: node.badge_request.field_member_to_badge
+field_name: field_member_to_badge
+entity_type: node
+bundle: badge_request
+label: 'Member to Badge'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:user'
+  handler_settings:
+    target_bundles: null
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    filter:
+      type: role
+      role:
+        instructor: instructor
+        member: member
+        member_pending_approval: member_pending_approval
+        administrator: '0'
+        services: '0'
+        manager: '0'
+        content_editor: '0'
+        special: '0'
+        data: '0'
+        facilitator: '0'
+        business: '0'
+        borrower: '0'
+    include_anonymous: true
+field_type: entity_reference

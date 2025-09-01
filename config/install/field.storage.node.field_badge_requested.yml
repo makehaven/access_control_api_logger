@@ -1,0 +1,20 @@
+uuid: b9c9bfc2-4ab4-407a-8534-2c8291ddc257
+langcode: und
+status: true
+dependencies:
+  module:
+    - node
+    - taxonomy
+id: node.field_badge_requested
+field_name: field_badge_requested
+entity_type: node
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

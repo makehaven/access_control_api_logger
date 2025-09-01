@@ -1,0 +1,5 @@
+check_user_exists: true
+check_user_status: false
+check_pause_payment: false
+check_user_has_permission: true
+check_badge_status: false
