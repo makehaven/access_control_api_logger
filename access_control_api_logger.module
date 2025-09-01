@@ -145,16 +145,6 @@ function _access_control_api_logger_log_access_request($identifier, $permission_
  *   The source of the access request.
  */
 function _access_control_api_logger_create_log($user, $badge, $result, $note = '', $source = '') {
-  // Check if the 'access_control_request' bundle exists.
-  $bundle_storage = \Drupal::entityTypeManager()->getStorage('eck_bundle');
-  $bundle = $bundle_storage->load('access_control_log.access_control_request');
-
-  if (!$bundle) {
-    // The bundle doesn't exist, so we can't create a log entry.
-    \Drupal::logger('access_control_api_logger')->warning('Cannot create access control log entry: the "access_control_request" bundle does not exist.');
-    return;
-  }
-
   /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
   $storage = \Drupal::entityTypeManager()->getStorage('access_control_log');
 

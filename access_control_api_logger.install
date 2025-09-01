@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the access_control_api_logger module.
+ */
+
+/**
+ * Implements hook_update_N().
+ *
+ * Enable the 'access_control_log' ECK entity type.
+ */
+function access_control_api_logger_update_8001() {
+  $entity_type = \Drupal::entityTypeManager()
+    ->getStorage('eck_entity_type')
+    ->load('access_control_log');
+
+  if ($entity_type && !$entity_type->status()) {
+    $entity_type->setStatus(TRUE)->save();
+    return t('The "Access control log" ECK entity type has been enabled.');
+  }
+}
