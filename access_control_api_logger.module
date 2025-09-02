@@ -131,6 +131,32 @@ function _access_control_api_logger_log_access_request($identifier, $permission_
 }
 
 /**
+ * Returns TRUE if the ECK log entity type + bundle are available & enabled.
+ */
+function _access_control_api_logger_log_is_available(): bool {
+  // ECK must be enabled.
+  if (!\Drupal::moduleHandler()->moduleExists('eck')) {
+    return FALSE;
+  }
+
+  // Entity type must be enabled in active config.
+  $cfg = \Drupal::config('eck.eck_entity_type.access_control_log');
+  if (!$cfg || !$cfg->get('status')) {
+    return FALSE;
+  }
+
+  // Entity type definition must exist.
+  $etm = \Drupal::entityTypeManager();
+  if (!$etm->hasDefinition('access_control_log')) {
+    return FALSE;
+  }
+
+  // Bundle must exist (ECK bundle config id format: "<entity_type>.<bundle>").
+  $bundle = $etm->getStorage('eck_type')->load('access_control_log.access_control_request');
+  return (bool) $bundle;
+}
+
+/**
  * Creates an access control request log entry.
  *
  * @param \Drupal\user\Entity\User|null $user
@@ -145,37 +171,41 @@ function _access_control_api_logger_log_access_request($identifier, $permission_
  *   The source of the access request.
  */
 function _access_control_api_logger_create_log($user, $badge, $result, $note = '', $source = '') {
-  /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
-  $storage = \Drupal::entityTypeManager()->getStorage('access_control_log');
-
-  // Create a new entity of type 'access_control_request'.
-  $log_entry = $storage->create([
-    'type' => 'access_control_request',
-  ]);
-
-  // Set the user reference field.
-  if ($user) {
-    $log_entry->set('field_access_request_user', $user->id());
+  // Guard: if entity type/bundle not available on this DB, skip logging (no 500).
+  if (!_access_control_api_logger_log_is_available()) {
+    \Drupal::logger('access_control_api_logger')->warning('Skipping log write: access_control_log bundle not available.');
+    return;
   }
 
-  // Set the badge (permission) reference field.
-  if ($badge) {
-    $log_entry->set('field_access_request_permission', $badge->id());
+  try {
+    $storage = \Drupal::entityTypeManager()->getStorage('access_control_log');
+    $log_entry = $storage->create(['type' => 'access_control_request']);
+
+    if ($user) {
+      $log_entry->set('field_access_request_user', $user->id());
+    }
+    if ($badge) {
+      $log_entry->set('field_access_request_permission', $badge->id());
+    }
+
+    $log_entry->set('field_access_request_result', $result ? 1 : 0);
+
+    if ($note !== '') {
+      $log_entry->set('field_access_request_note', $note);
+    }
+    if ($source !== '') {
+      $log_entry->set('field_access_request_source', $source);
+    }
+    if (isset($_SERVER['REQUEST_METHOD'])) {
+      $log_entry->set('field_access_request_method', $_SERVER['REQUEST_METHOD']);
+    }
+
+    $log_entry->save();
   }
-
-  // Set the result field (boolean).
-  $log_entry->set('field_access_request_result', $result ? 1 : 0);
-
-  // Set the note field (text).
-  $log_entry->set('field_access_request_note', $note);
-
-  // Set the source field if it exists.
-  if ($log_entry->hasField('field_access_request_source')) {
-    $log_entry->set('field_access_request_source', $source);
+  catch (\Throwable $e) {
+    // Never take down the API—log and continue.
+    \Drupal::logger('access_control_api_logger')->error('Failed to write access log: @msg', ['@msg' => $e->getMessage()]);
   }
-
-  // Save the entity.
-  $log_entry->save();
 }
 
 /**
