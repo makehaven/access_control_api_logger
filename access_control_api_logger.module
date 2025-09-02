@@ -131,6 +131,25 @@ function _access_control_api_logger_log_access_request($identifier, $permission_
 }
 
 /**
+ * Return TRUE if the ECK log entity type + bundle exist and are enabled.
+ */
+function _access_control_api_logger_log_is_available(): bool {
+  if (!\Drupal::moduleHandler()->moduleExists('eck')) {
+    return FALSE;
+  }
+  $cfg = \Drupal::config('eck.eck_entity_type.access_control_log');
+  if (!$cfg || !$cfg->get('status')) {
+    return FALSE;
+  }
+  $etm = \Drupal::entityTypeManager();
+  if (!$etm->hasDefinition('access_control_log')) {
+    return FALSE;
+  }
+  // ECK bundle config id: "<entity_type>.<bundle>".
+  return (bool) $etm->getStorage('eck_type')->load('access_control_log.access_control_request');
+}
+
+/**
  * Creates an access control request log entry.
  *
  * @param \Drupal\user\Entity\User|null $user
@@ -145,6 +164,10 @@ function _access_control_api_logger_log_access_request($identifier, $permission_
  *   The source of the access request.
  */
 function _access_control_api_logger_create_log($user, $badge, $result, $note = '', $source = '') {
+  if (!_access_control_api_logger_log_is_available()) {
+    \Drupal::logger('access_control_api_logger')->warning('Skipping log write: access_control_log bundle not available.');
+    return;
+  }
   /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
   $storage = \Drupal::entityTypeManager()->getStorage('access_control_log');
 
