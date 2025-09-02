@@ -4,6 +4,7 @@ status: true
 dependencies: {  }
 id: access_control_log
 label: 'Access control log'
+bundle: type
 uid: false
 created: true
 changed: false
