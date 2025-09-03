@@ -12,3 +12,4 @@ dependencies:
   - drupal:options
   - drupal:profile
   - eck:eck
+  - drupal:field_permissions

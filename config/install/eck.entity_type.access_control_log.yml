@@ -1,0 +1,10 @@
+uuid: 6f951d2f-b8b8-4f3b-8e5f-3d60b9b8a3e1
+langcode: en
+status: true
+dependencies: { }
+id: access_control_log
+label: 'Access Control Log'
+created: true
+changed: true
+uid: true
+title: false
