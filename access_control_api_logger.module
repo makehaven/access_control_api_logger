@@ -164,43 +164,54 @@ function _access_control_api_logger_log_is_available(): bool {
  *   The source of the access request.
  */
 function _access_control_api_logger_create_log($user, $badge, $result, $note = '', $source = '') {
-  if (!_access_control_api_logger_log_is_available()) {
-    \Drupal::logger('access_control_api_logger')->warning('Skipping log write: access_control_log bundle not available.');
+  // Only proceed if ECK entity + bundle are available.
+  $etm = \Drupal::entityTypeManager();
+  $bundles = \Drupal::service('entity_type.bundle.info')->getBundleInfo('access_control_log');
+  if (!isset($bundles['access_control_request'])) {
+    \Drupal::logger('access_control_api_logger')->warning('Skipping log write: access_control_request bundle not available.');
     return;
   }
-  /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
-  $storage = \Drupal::entityTypeManager()->getStorage('access_control_log');
 
-  // Create a new entity of the appropriate bundle type.
-  $bundle_type = $storage->getEntityType()->getBundleEntityType();
-  $log_entry = $storage->create([
-    $bundle_type => 'access_control_request',
-  ]);
+  // Normalize inputs.
+  $uid = $user ? (int) $user->id() : NULL;
+  $permission_tid = $badge ? (int) $badge->id() : NULL;
+  $granted = (bool) $result;
+  $ts = \Drupal::time()->getRequestTime();
 
-  // Set the user reference field.
-  if ($user) {
-    $log_entry->set('field_access_request_user', $user->id());
+  try {
+    // Create the ECK entity (this MUST be 'access_control_log' + 'access_control_request').
+    /** @var \Drupal\Core\Entity\ContentEntityStorageInterface $storage */
+    $storage = $etm->getStorage('access_control_log');
+
+    $entity = $storage->create([
+      'type' => 'access_control_request',
+      'field_access_request_user' => $uid,
+      'field_access_request_permission' => $permission_tid,
+      'field_access_request_result' => $granted ? 1 : 0,
+      'field_access_request_note' => $note ?: '',
+      'field_access_request_source' => $source ?: '',
+      'created' => $ts,
+    ]);
+
+    // Save (this is what fires our presence update).
+    $entity->save();
+
+    \Drupal::logger('access_control_api_logger')->notice(
+      'Wrote access log entity id=@id uid=@uid perm=@perm result=@res source=@src',
+      [
+        '@id' => method_exists($entity, 'id') ? $entity->id() : 'n/a',
+        '@uid' => $uid ?? 'NULL',
+        '@perm' => $permission_tid ?? 'NULL',
+        '@res' => $granted ? '1' : '0',
+        '@src' => $source,
+      ]
+    );
   }
-
-  // Set the badge (permission) reference field.
-  if ($badge) {
-    $log_entry->set('field_access_request_permission', $badge->id());
+  catch (\Throwable $e) {
+    \Drupal::logger('access_control_api_logger')->error('Failed to save access log: @m', ['@m' => $e->getMessage()]);
   }
-
-  // Set the result field (boolean).
-  $log_entry->set('field_access_request_result', $result ? 1 : 0);
-
-  // Set the note field (text).
-  $log_entry->set('field_access_request_note', $note);
-
-  // Set the source field if it exists.
-  if ($log_entry->hasField('field_access_request_source')) {
-    $log_entry->set('field_access_request_source', $source);
-  }
-
-  // Save the entity.
-  $log_entry->save();
 }
+
 
 /**
  * Helper function to find a user by serial number.
