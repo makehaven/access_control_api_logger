@@ -2,16 +2,41 @@
 
 namespace Drupal\access_control_api_logger\Controller;
 
+use Drupal\access_control_api_logger\Service\FallbackStoreCache;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\taxonomy\Entity\Term;
+use Drupal\user\Entity\User;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Drupal\user\Entity\User;
-use Drupal\taxonomy\Entity\Term;
 
 /**
  * Controller for Access Control API Logger.
  */
 class AccessControlApiLoggerController extends ControllerBase {
+
+  /**
+   * Cached fallback store builder.
+   *
+   * @var \Drupal\access_control_api_logger\Service\FallbackStoreCache
+   */
+  protected FallbackStoreCache $fallbackStoreCache;
+
+  /**
+   * AccessControlApiLoggerController constructor.
+   */
+  public function __construct(FallbackStoreCache $fallback_store_cache) {
+    $this->fallbackStoreCache = $fallback_store_cache;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('access_control_api_logger.fallback_store_cache')
+    );
+  }
 
   /**
    * Handles access control request logging by UUID.
@@ -40,6 +65,40 @@ class AccessControlApiLoggerController extends ControllerBase {
     //   '@permission_id' => $permission_id,
     // ]);
     return $this->logAccessRequest($email, $permission_id, 'email', $request);
+  }
+
+  /**
+   * Exports the fallback Maker UI store as JSON when the shared code matches.
+   */
+  public function exportFallbackStore(Request $request) {
+    $config = $this->config('access_control_api_logger.settings');
+    $expected_code = trim((string) $config->get('fallback_shared_code'));
+
+    if ($expected_code === '') {
+      return new JsonResponse(['error' => 'Fallback export disabled.'], 503);
+    }
+
+    $provided_code = (string) $request->query->get('code', '');
+    if ($provided_code === '' && $request->headers->has('X-Access-Control-Code')) {
+      $provided_code = (string) $request->headers->get('X-Access-Control-Code');
+    }
+
+    if ($provided_code === '' || !hash_equals($expected_code, $provided_code)) {
+      return new JsonResponse(['error' => 'Invalid or missing download code.'], 403);
+    }
+
+    try {
+      $payload = $this->fallbackStoreCache->getPayload();
+    }
+    catch (\Throwable $e) {
+      \Drupal::logger('access_control_api_logger')->error('Failed to build fallback store: @message', ['@message' => $e->getMessage()]);
+      return new JsonResponse(['error' => 'Unable to build fallback export.'], 500);
+    }
+
+    $response = new JsonResponse($payload);
+    $response->headers->set('Content-Disposition', 'attachment; filename="maker-access-control-store.json"');
+    $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    return $response;
   }
 
   /**

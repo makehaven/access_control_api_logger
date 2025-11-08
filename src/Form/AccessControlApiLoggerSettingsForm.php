@@ -118,6 +118,60 @@ class AccessControlApiLoggerSettingsForm extends ConfigFormBase {
       '#description' => $this->t('Ensure the badge is either active or not restricted. If unchecked, any status is treated as valid.'),
     ];
 
+    $form['fallback_export'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Fallback JSON export'),
+      '#description' => $this->t('Configure how the lightweight Maker Access Control UI downloads the combined users/tools/assignments JSON file.'),
+    ];
+
+    $form['fallback_export']['fallback_shared_code'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Shared download code'),
+      '#default_value' => $config->get('fallback_shared_code') ?? '',
+      '#description' => $this->t('Provide this code to the fallback system so it can call /api/v0/access-control/fallback-store?code=YOURCODE (or send it via the X-Access-Control-Code header). Leave blank to disable the export entirely.'),
+      '#attributes' => ['autocomplete' => 'off'],
+    ];
+
+    $form['fallback_export']['fallback_cache_enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Cache the generated JSON payload'),
+      '#default_value' => $config->get('fallback_cache_enabled') ?? TRUE,
+      '#description' => $this->t('When enabled, the export payload is cached and reused until it expires or is invalidated by cron/entity changes.'),
+    ];
+
+    $form['fallback_export']['fallback_cache_max_age'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Cache lifetime (seconds)'),
+      '#default_value' => $config->get('fallback_cache_max_age') ?? 900,
+      '#min' => 60,
+      '#step' => 60,
+      '#description' => $this->t('How long the cached JSON should be reused before being rebuilt.'),
+      '#states' => [
+        'visible' => [
+          ':input[name="fallback_cache_enabled"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
+    $form['fallback_export']['fallback_cache_refresh_cron'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Refresh cache during cron'),
+      '#default_value' => $config->get('fallback_cache_refresh_cron') ?? TRUE,
+      '#description' => $this->t('If checked, cron will rebuild the cached JSON proactively so downloads stay fast.'),
+      '#states' => [
+        'visible' => [
+          ':input[name="fallback_cache_enabled"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
+    $form['fallback_export']['fallback_limit_permissions'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Limit to permission IDs'),
+      '#default_value' => $config->get('fallback_limit_permissions') ?? '',
+      '#description' => $this->t('Optional newline or comma-delimited list of badge permission IDs (field_badge_text_id values). Leave blank to include every badge.'),
+    ];
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -131,6 +185,11 @@ class AccessControlApiLoggerSettingsForm extends ConfigFormBase {
       ->set('check_pause_payment', $form_state->getValue('check_pause_payment')) // Store the pause/payment setting.
       ->set('check_user_has_permission', $form_state->getValue('check_user_has_permission'))
       ->set('check_badge_status', $form_state->getValue('check_badge_status'))
+      ->set('fallback_shared_code', trim((string) $form_state->getValue('fallback_shared_code')))
+      ->set('fallback_cache_enabled', (bool) $form_state->getValue('fallback_cache_enabled'))
+      ->set('fallback_cache_max_age', (int) $form_state->getValue('fallback_cache_max_age'))
+      ->set('fallback_cache_refresh_cron', (bool) $form_state->getValue('fallback_cache_refresh_cron'))
+      ->set('fallback_limit_permissions', trim((string) $form_state->getValue('fallback_limit_permissions')))
       ->save();
 
     parent::submitForm($form, $form_state);

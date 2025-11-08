@@ -88,6 +88,24 @@ Each access request is logged in the `access_control_log` entity with the follow
 - **Note**: Any additional information or reasons for denial.
 - **Source** (optional): The source of the request (if provided in the URL).
 
+## Fallback JSON Export
+
+The module can generate a single JSON file containing all users, tools (badges), and assignments so the lightweight [Maker Access Control UI](../maker-access-control-ui) can run as a backup when Drupal or the network is unavailable.
+
+1. Visit `Configuration → System → Access Control Logger Settings` and set a **Shared download code**. Leaving this blank disables the export entirely.
+2. Enable the **cache** option in the same form to pre-build the JSON payload. Cron (or any change to users/badges/badge requests) automatically warms or invalidates the cache so subsequent downloads do not repeat the expensive export.
+3. Optionally list one or more **permission IDs** (their `field_badge_text_id` values) to limit the export to critical badges such as your door credential.
+4. Schedule a job (e.g. cron) that downloads the file:
+
+   ```bash
+   curl -sS "https://example.com/api/v0/access-control/fallback-store?code=YOURCODE" \
+     -o /path/to/maker-store.json
+   ```
+
+   Alternatively send the code via the `X-Access-Control-Code` header instead of the query parameter.
+
+The response matches the `maker-store.json` format (`users`, `tools`, and `assignments` arrays) so it can be copied directly into the fallback system's data directory.
+
 ## Field Handling
 The module checks if the following fields exist on the user entity before performing access checks. If these fields do not exist, the code will continue without breaking:
 

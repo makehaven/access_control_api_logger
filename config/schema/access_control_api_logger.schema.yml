@@ -1,0 +1,34 @@
+access_control_api_logger.settings:
+  type: config_object
+  label: 'Access Control API Logger settings'
+  mapping:
+    check_user_exists:
+      type: boolean
+      label: 'Check user exists'
+    check_user_status:
+      type: boolean
+      label: 'Check user status'
+    check_pause_payment:
+      type: boolean
+      label: 'Check pause/payment flags'
+    check_user_has_permission:
+      type: boolean
+      label: 'Check user has permission'
+    check_badge_status:
+      type: boolean
+      label: 'Check badge status'
+    fallback_shared_code:
+      type: string
+      label: 'Fallback download shared code'
+    fallback_cache_enabled:
+      type: boolean
+      label: 'Enable fallback export caching'
+    fallback_cache_max_age:
+      type: integer
+      label: 'Fallback export cache lifetime (seconds)'
+    fallback_cache_refresh_cron:
+      type: boolean
+      label: 'Refresh fallback cache during cron'
+    fallback_limit_permissions:
+      type: string
+      label: 'Limit fallback export to specific permission IDs'

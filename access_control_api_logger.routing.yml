@@ -17,6 +17,16 @@ access_control_api_logger.serial_permission:
     _access: 'TRUE'
   options:
     no_cache: 'TRUE'
+
+access_control_api_logger.fallback_store_export:
+  path: '/api/v0/access-control/fallback-store'
+  defaults:
+    _controller: '\Drupal\access_control_api_logger\Controller\AccessControlApiLoggerController::exportFallbackStore'
+    _title: 'Access Control Fallback Store'
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: 'TRUE'
 access_control_api_logger.list_all_permissions:
   path: '/api/v0/permissions/list'
   defaults:

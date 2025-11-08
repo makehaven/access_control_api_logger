@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\Core\Entity\EntityInterface;
+
 /**
  * Implements hook_views_post_execute().
  */
@@ -210,6 +212,81 @@ function _access_control_api_logger_create_log($user, $badge, $result, $note = '
   catch (\Throwable $e) {
     \Drupal::logger('access_control_api_logger')->error('Failed to save access log: @m', ['@m' => $e->getMessage()]);
   }
+}
+
+/**
+ * Implements hook_cron().
+ */
+function access_control_api_logger_cron() {
+  $config = \Drupal::config('access_control_api_logger.settings');
+  $cache_enabled = $config->get('fallback_cache_enabled');
+  if ($cache_enabled === FALSE) {
+    return;
+  }
+  if (($config->get('fallback_cache_refresh_cron') ?? TRUE) === FALSE) {
+    return;
+  }
+
+  try {
+    \Drupal::service('access_control_api_logger.fallback_store_cache')->warmCache();
+  }
+  catch (\Throwable $e) {
+    \Drupal::logger('access_control_api_logger')->error('Unable to warm fallback cache during cron: @message', ['@message' => $e->getMessage()]);
+  }
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function access_control_api_logger_entity_insert(EntityInterface $entity) {
+  _access_control_api_logger_maybe_invalidate_fallback_cache($entity);
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function access_control_api_logger_entity_update(EntityInterface $entity) {
+  _access_control_api_logger_maybe_invalidate_fallback_cache($entity);
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function access_control_api_logger_entity_delete(EntityInterface $entity) {
+  _access_control_api_logger_maybe_invalidate_fallback_cache($entity);
+}
+
+/**
+ * Invalidate cached fallback data when relevant entities change.
+ */
+function _access_control_api_logger_maybe_invalidate_fallback_cache(EntityInterface $entity) {
+  if (!_access_control_api_logger_entity_triggers_cache_invalidation($entity)) {
+    return;
+  }
+
+  try {
+    \Drupal::service('access_control_api_logger.fallback_store_cache')->invalidate();
+  }
+  catch (\Throwable $e) {
+    \Drupal::logger('access_control_api_logger')->error('Unable to invalidate fallback cache: @message', ['@message' => $e->getMessage()]);
+  }
+}
+
+/**
+ * Determine if the entity change affects the fallback export.
+ */
+function _access_control_api_logger_entity_triggers_cache_invalidation(EntityInterface $entity): bool {
+  $entity_type_id = $entity->getEntityTypeId();
+  if ($entity_type_id === 'user') {
+    return TRUE;
+  }
+  if ($entity_type_id === 'taxonomy_term' && $entity->bundle() === 'badges') {
+    return TRUE;
+  }
+  if ($entity_type_id === 'node' && $entity->bundle() === 'badge_request') {
+    return TRUE;
+  }
+  return FALSE;
 }
 
 

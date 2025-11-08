@@ -1,0 +1,15 @@
+services:
+  access_control_api_logger.fallback_store_builder:
+    class: Drupal\access_control_api_logger\Service\FallbackStoreBuilder
+    arguments:
+      - '@entity_type.manager'
+      - '@config.factory'
+      - '@logger.factory'
+  access_control_api_logger.fallback_store_cache:
+    class: Drupal\access_control_api_logger\Service\FallbackStoreCache
+    arguments:
+      - '@access_control_api_logger.fallback_store_builder'
+      - '@cache.default'
+      - '@config.factory'
+      - '@logger.factory'
+      - '@datetime.time'
