@@ -104,6 +104,9 @@ class FallbackStoreBuilder {
       ->condition('status', 1)
       ->accessCheck(FALSE);
 
+    $include_names = (bool) ($config->get('fallback_include_user_names') ?? FALSE);
+    $include_email = (bool) ($config->get('fallback_include_user_email') ?? FALSE);
+
     $uids = $query->execute();
     if (empty($uids)) {
       return [
@@ -128,14 +131,22 @@ class FallbackStoreBuilder {
 
       $store_id = $this->buildUserStoreId($user);
       $entity_to_store_id[$user->id()] = $store_id;
-      $records[$store_id] = [
+      $record = [
         'id' => $store_id,
         'card_serial' => $card_serial,
-        'first_name' => $this->safeUserFieldValue($user, 'field_first_name'),
-        'last_name' => $this->safeUserFieldValue($user, 'field_last_name'),
         'uuid' => $user->uuid(),
-        'email' => $user->getEmail() ?? '',
       ];
+
+      if ($include_names) {
+        $record['first_name'] = $this->safeUserFieldValue($user, 'field_first_name');
+        $record['last_name'] = $this->safeUserFieldValue($user, 'field_last_name');
+      }
+
+      if ($include_email) {
+        $record['email'] = $user->getEmail() ?? '';
+      }
+
+      $records[$store_id] = $record;
     }
 
     ksort($records, SORT_STRING);

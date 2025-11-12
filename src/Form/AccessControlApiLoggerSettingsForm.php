@@ -172,6 +172,20 @@ class AccessControlApiLoggerSettingsForm extends ConfigFormBase {
       '#description' => $this->t('Optional newline or comma-delimited list of badge permission IDs (field_badge_text_id values). Leave blank to include every badge.'),
     ];
 
+    $form['fallback_export']['fallback_include_user_names'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Include first/last name in fallback export'),
+      '#default_value' => $config->get('fallback_include_user_names') ?? FALSE,
+      '#description' => $this->t('When checked, the fallback JSON will include user first_name and last_name values. Keep disabled to omit them for security.'),
+    ];
+
+    $form['fallback_export']['fallback_include_user_email'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Include email in fallback export'),
+      '#default_value' => $config->get('fallback_include_user_email') ?? FALSE,
+      '#description' => $this->t('When checked, the fallback JSON will include the user email field. Leave unchecked to exclude email addresses.'),
+    ];
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -190,6 +204,8 @@ class AccessControlApiLoggerSettingsForm extends ConfigFormBase {
       ->set('fallback_cache_max_age', (int) $form_state->getValue('fallback_cache_max_age'))
       ->set('fallback_cache_refresh_cron', (bool) $form_state->getValue('fallback_cache_refresh_cron'))
       ->set('fallback_limit_permissions', trim((string) $form_state->getValue('fallback_limit_permissions')))
+      ->set('fallback_include_user_names', (bool) $form_state->getValue('fallback_include_user_names'))
+      ->set('fallback_include_user_email', (bool) $form_state->getValue('fallback_include_user_email'))
       ->save();
 
     parent::submitForm($form, $form_state);

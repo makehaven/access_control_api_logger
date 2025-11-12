@@ -95,7 +95,8 @@ The module can generate a single JSON file containing all users, tools (badges),
 1. Visit `Configuration → System → Access Control Logger Settings` and set a **Shared download code**. Leaving this blank disables the export entirely.
 2. Enable the **cache** option in the same form to pre-build the JSON payload. Cron (or any change to users/badges/badge requests) automatically warms or invalidates the cache so subsequent downloads do not repeat the expensive export.
 3. Optionally list one or more **permission IDs** (their `field_badge_text_id` values) to limit the export to critical badges such as your door credential.
-4. Schedule a job (e.g. cron) that downloads the file:
+4. Decide whether the fallback export should include personally-identifying information. By default only card serials, UUIDs, permissions, and assignments are exported; check the **Include first/last name** and/or **Include email** boxes if an administrator explicitly approves releasing that data.
+5. Schedule a job (e.g. cron) that downloads the file:
 
    ```bash
    curl -sS "https://example.com/api/v0/access-control/fallback-store?code=YOURCODE" \

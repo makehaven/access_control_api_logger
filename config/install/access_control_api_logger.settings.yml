@@ -8,3 +8,5 @@ fallback_cache_enabled: true
 fallback_cache_max_age: 900
 fallback_cache_refresh_cron: true
 fallback_limit_permissions: ''
+fallback_include_user_names: false
+fallback_include_user_email: false
