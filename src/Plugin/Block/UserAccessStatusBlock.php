@@ -7,12 +7,11 @@ namespace Drupal\access_control_api_logger\Plugin\Block;
 use Drupal\access_control_api_logger\Service\AccessStatusEvaluator;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\Url;
+use Drupal\makerspace_user_links\Service\UserLinkManager;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -35,11 +34,6 @@ class UserAccessStatusBlock extends BlockBase implements ContainerFactoryPluginI
   protected AccessStatusEvaluator $accessStatusEvaluator;
 
   /**
-   * Module handler for collecting admin links.
-   */
-  protected ModuleHandlerInterface $moduleHandler;
-
-  /**
    * Current user.
    */
   protected AccountInterface $currentUser;
@@ -55,15 +49,20 @@ class UserAccessStatusBlock extends BlockBase implements ContainerFactoryPluginI
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
+   * Makerspace user link manager.
+   */
+  protected UserLinkManager $linkManager;
+
+  /**
    * Constructs the block plugin.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, AccessStatusEvaluator $access_status_evaluator, ModuleHandlerInterface $module_handler, AccountInterface $current_user, RouteMatchInterface $route_match, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, AccessStatusEvaluator $access_status_evaluator, AccountInterface $current_user, RouteMatchInterface $route_match, EntityTypeManagerInterface $entity_type_manager, UserLinkManager $link_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->accessStatusEvaluator = $access_status_evaluator;
-    $this->moduleHandler = $module_handler;
     $this->currentUser = $current_user;
     $this->routeMatch = $route_match;
     $this->entityTypeManager = $entity_type_manager;
+    $this->linkManager = $link_manager;
   }
 
   /**
@@ -75,10 +74,10 @@ class UserAccessStatusBlock extends BlockBase implements ContainerFactoryPluginI
       $plugin_id,
       $plugin_definition,
       $container->get('access_control_api_logger.access_status_evaluator'),
-      $container->get('module_handler'),
       $container->get('current_user'),
       $container->get('current_route_match'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('makerspace_user_links.link_manager')
     );
   }
 
@@ -92,7 +91,7 @@ class UserAccessStatusBlock extends BlockBase implements ContainerFactoryPluginI
     }
 
     $status = $this->accessStatusEvaluator->evaluate($account);
-    $link_groups = $this->buildAdminLinkGroups($account);
+    $link_groups = $this->linkManager->getGroupedLinks($account, $this->currentUser);
 
     return [
       '#theme' => 'access_control_user_status_block',
@@ -106,127 +105,6 @@ class UserAccessStatusBlock extends BlockBase implements ContainerFactoryPluginI
         'contexts' => ['route', 'url.path', 'user.permissions'],
         'tags' => $account->getCacheTags(),
       ],
-    ];
-  }
-
-  /**
-   * Builds grouped admin links provided by other modules.
-   */
-  protected function buildAdminLinkGroups(UserInterface $account): array {
-    $link_sets = $this->moduleHandler->invokeAll('access_control_api_logger_user_admin_links', [$account, $this->currentUser]);
-    $links = [];
-    $seen = [];
-
-    foreach ($link_sets as $set) {
-      if (!is_array($set)) {
-        continue;
-      }
-      foreach ($set as $definition) {
-        if (!is_array($definition)) {
-          continue;
-        }
-        $normalized = $this->normalizeLinkDefinition($definition);
-        if (!$normalized) {
-          continue;
-        }
-        $id = $normalized['id'] ?? NULL;
-        if ($id && isset($seen[$id])) {
-          continue;
-        }
-        if ($id) {
-          $seen[$id] = TRUE;
-        }
-        $links[] = $normalized;
-      }
-    }
-
-    $this->moduleHandler->alter('access_control_api_logger_user_admin_links', $links, $account, $this->currentUser);
-
-    usort($links, static function (array $a, array $b): int {
-      return $a['weight'] <=> $b['weight'] ?: strcasecmp((string) $a['title'], (string) $b['title']);
-    });
-
-    $grouped = [];
-    foreach ($links as $link) {
-      $category = $link['category'] ?? $this->t('Admin Links');
-      $category_label = (string) $category;
-      $group_key = md5($category_label);
-
-      if (!isset($grouped[$group_key])) {
-        $grouped[$group_key] = [
-          'label' => $category,
-          'links' => [],
-          'weight' => $link['group_weight'] ?? 0,
-        ];
-      }
-      $grouped[$group_key]['links'][] = $link;
-    }
-
-    usort($grouped, static function (array $a, array $b): int {
-      $comparison = ($a['weight'] ?? 0) <=> ($b['weight'] ?? 0);
-      if ($comparison !== 0) {
-        return $comparison;
-      }
-      return strcasecmp((string) $a['label'], (string) $b['label']);
-    });
-
-    return $grouped;
-  }
-
-  /**
-   * Normalizes an incoming link definition.
-   */
-  protected function normalizeLinkDefinition(array $definition): ?array {
-    if (isset($definition['access']) && !$definition['access']) {
-      return NULL;
-    }
-
-    if (!empty($definition['permissions'])) {
-      foreach ((array) $definition['permissions'] as $permission) {
-        if (!$this->currentUser->hasPermission($permission)) {
-          return NULL;
-        }
-      }
-    }
-
-    if (empty($definition['title'])) {
-      return NULL;
-    }
-
-    $url = $definition['url'] ?? NULL;
-    if (!$url && !empty($definition['route_name'])) {
-      $url = Url::fromRoute(
-        $definition['route_name'],
-        $definition['route_parameters'] ?? [],
-        $definition['route_options'] ?? []
-      );
-    }
-    elseif (!$url && !empty($definition['uri'])) {
-      $url = Url::fromUri($definition['uri'], $definition['url_options'] ?? []);
-    }
-
-    if (is_string($url)) {
-      $url = Url::fromUri($url);
-    }
-
-    if (!$url instanceof Url) {
-      return NULL;
-    }
-
-    if (!empty($definition['attributes'])) {
-      $options = $url->getOptions();
-      $options['attributes'] = ($options['attributes'] ?? []) + $definition['attributes'];
-      $url->setOptions($options);
-    }
-
-    return [
-      'id' => $definition['id'] ?? NULL,
-      'title' => $definition['title'],
-      'url' => $url,
-      'description' => $definition['description'] ?? NULL,
-      'category' => $definition['category'] ?? NULL,
-      'weight' => (int) ($definition['weight'] ?? 0),
-      'group_weight' => (int) ($definition['group_weight'] ?? 0),
     ];
   }
 

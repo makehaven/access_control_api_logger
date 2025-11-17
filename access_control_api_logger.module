@@ -353,9 +353,9 @@ function access_control_api_logger_theme(): array {
 }
 
 /**
- * Implements hook_access_control_api_logger_user_admin_links().
+ * Implements hook_makerspace_user_links_links().
  */
-function access_control_api_logger_access_control_api_logger_user_admin_links(UserInterface $account, AccountInterface $viewer): array {
+function access_control_api_logger_makerspace_user_links_links(UserInterface $account, AccountInterface $viewer): array {
   $links = [];
 
   if ($viewer->hasPermission('access civicrm')) {
