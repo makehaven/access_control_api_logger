@@ -1,0 +1,53 @@
+{#
+/**
+ * @file
+ * Template for the member access status panel.
+ */
+#}
+<div class="user-access-status-panel user-access-status-panel--{{ summary.state }}">
+  <div class="user-access-status-panel__summary">
+    <div class="user-access-status-panel__indicator user-access-status-panel__indicator--{{ summary.state }}"></div>
+    <div class="user-access-status-panel__summary-text">
+      <div class="user-access-status-panel__summary-label">{{ summary.label }}</div>
+      <div class="user-access-status-panel__summary-message">{{ summary.message }}</div>
+    </div>
+  </div>
+
+  <div class="user-access-status-panel__checks">
+    {% for item in items %}
+      <div class="user-access-status-panel__check user-access-status-panel__check--{{ item.state }}">
+        <div class="user-access-status-panel__check-label">{{ item.label }}</div>
+        <div class="user-access-status-panel__check-message">
+          {{ item.message }}
+          {% if item.details %}
+            <span class="user-access-status-panel__check-details">({{ item.details }})</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="user-access-status-panel__links">
+    {% if link_groups %}
+      {% for group in link_groups %}
+        <div class="user-access-status-panel__link-group">
+          {% if group.label %}
+            <div class="user-access-status-panel__link-heading">{{ group.label }}</div>
+          {% endif %}
+          <ul class="user-access-status-panel__link-list">
+            {% for link in group.links %}
+              <li class="user-access-status-panel__link-item">
+                <div class="user-access-status-panel__link-title">{{ link(link.title, link.url) }}</div>
+                {% if link.description %}
+                  <div class="user-access-status-panel__link-description">{{ link.description }}</div>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="user-access-status-panel__link-empty">{{ 'No admin links available.'|t }}</div>
+    {% endif %}
+  </div>
+</div>

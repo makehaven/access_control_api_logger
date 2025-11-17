@@ -10,3 +10,4 @@ fallback_cache_refresh_cron: true
 fallback_limit_permissions: ''
 fallback_include_user_names: false
 fallback_include_user_email: false
+chargebee_dashboard_base: 'https://makehaven.chargebee.com'

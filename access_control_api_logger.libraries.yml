@@ -1,0 +1,4 @@
+user_status_panel:
+  css:
+    theme:
+      css/user-status-panel.css: {}

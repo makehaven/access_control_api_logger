@@ -1,0 +1,108 @@
+.user-access-status-panel {
+  border: 1px solid #d7d7d7;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.user-access-status-panel__summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.user-access-status-panel__indicator {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.user-access-status-panel__indicator--ok {
+  background: #1f9d55;
+  border-color: #1f9d55;
+}
+
+.user-access-status-panel__indicator--blocked {
+  background: #c92a2a;
+  border-color: #c92a2a;
+}
+
+.user-access-status-panel__summary-label {
+  font-weight: 600;
+}
+
+.user-access-status-panel__checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.user-access-status-panel__check {
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+}
+
+.user-access-status-panel__check--blocked {
+  border-color: #f1a7a7;
+  background: #fff5f5;
+}
+
+.user-access-status-panel__check--ok {
+  border-color: #d2f4d2;
+  background: #f6ffed;
+}
+
+.user-access-status-panel__check-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.user-access-status-panel__check-details {
+  font-size: 0.75rem;
+  color: #6f6f6f;
+}
+
+.user-access-status-panel__link-group + .user-access-status-panel__link-group {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #eaeaea;
+}
+
+.user-access-status-panel__link-heading {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.user-access-status-panel__link-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.user-access-status-panel__link-item + .user-access-status-panel__link-item {
+  margin-top: 0.4rem;
+}
+
+.user-access-status-panel__link-title a {
+  font-weight: 600;
+}
+
+.user-access-status-panel__link-description {
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.user-access-status-panel__link-empty {
+  font-style: italic;
+  color: #555;
+}

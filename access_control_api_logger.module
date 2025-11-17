@@ -1,6 +1,9 @@
 <?php
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
+use Drupal\user\UserInterface;
 
 /**
  * Implements hook_views_post_execute().
@@ -331,4 +334,144 @@ function _access_control_api_logger_get_user_by_serial($serial) {
   }
 
   return NULL;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function access_control_api_logger_theme(): array {
+  return [
+    'access_control_user_status_block' => [
+      'variables' => [
+        'summary' => [],
+        'items' => [],
+        'link_groups' => [],
+      ],
+      'template' => 'access-control-user-status-block',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_access_control_api_logger_user_admin_links().
+ */
+function access_control_api_logger_access_control_api_logger_user_admin_links(UserInterface $account, AccountInterface $viewer): array {
+  $links = [];
+
+  if ($viewer->hasPermission('access civicrm')) {
+    $contact_id = access_control_api_logger_get_civicrm_contact_id($account);
+    if ($contact_id) {
+      $links[] = [
+        'id' => 'civicrm_contact',
+        'title' => t('Open in CiviCRM'),
+        'url' => Url::fromUri('internal:/civicrm/contact/view', [
+          'query' => [
+            'reset' => 1,
+            'cid' => $contact_id,
+          ],
+          'attributes' => [
+            'target' => '_blank',
+            'rel' => 'noopener',
+          ],
+        ]),
+        'description' => t('Review the synced CiviCRM contact.'),
+        'category' => t('CRM'),
+        'weight' => -100,
+      ];
+    }
+  }
+
+  $chargebee_url = access_control_api_logger_get_chargebee_subscription_url($account);
+  if ($chargebee_url) {
+    $links[] = [
+      'id' => 'chargebee_subscription',
+      'title' => t('Chargebee Subscription'),
+      'url' => $chargebee_url,
+      'description' => t('Open the member subscription in Chargebee.'),
+      'category' => t('Billing'),
+      'weight' => -50,
+    ];
+  }
+
+  return $links;
+}
+
+/**
+ * Resolve the CiviCRM contact id for a Drupal user.
+ */
+function access_control_api_logger_get_civicrm_contact_id(UserInterface $account): ?int {
+  if (!\Drupal::moduleHandler()->moduleExists('civicrm')) {
+    return NULL;
+  }
+
+  // Prefer the helper from sync_roles_civi_bridge when available.
+  if (function_exists('sync_roles_bridge_get_contact_id')) {
+    try {
+      $logger = \Drupal::logger('access_control_api_logger');
+      /** @var \Drupal\civicrm\Civicrm $civicrm */
+      $civicrm = \Drupal::service('civicrm');
+      $contact_id = sync_roles_bridge_get_contact_id($account, $logger, $civicrm);
+      if ($contact_id) {
+        return (int) $contact_id;
+      }
+    }
+    catch (\Throwable $throwable) {
+      \Drupal::logger('access_control_api_logger')->warning('Unable to read CiviCRM contact id via sync bridge: @message', [
+        '@message' => $throwable->getMessage(),
+      ]);
+    }
+  }
+
+  if (!function_exists('civicrm_api3')) {
+    return NULL;
+  }
+
+  try {
+    /** @var \Drupal\civicrm\Civicrm $civicrm */
+    $civicrm = \Drupal::service('civicrm');
+    $civicrm->initialize();
+
+    $uf_match = civicrm_api3('UFMatch', 'get', [
+      'sequential' => 1,
+      'uf_id' => $account->id(),
+      'check_permissions' => 0,
+      'options' => ['limit' => 1],
+    ]);
+    if (!empty($uf_match['values'][0]['contact_id'])) {
+      return (int) $uf_match['values'][0]['contact_id'];
+    }
+  }
+  catch (\Throwable $throwable) {
+    \Drupal::logger('access_control_api_logger')->warning('Unable to resolve CiviCRM contact id: @message', [
+      '@message' => $throwable->getMessage(),
+    ]);
+  }
+  return NULL;
+}
+
+/**
+ * Builds the Chargebee subscription URL for an account if available.
+ */
+function access_control_api_logger_get_chargebee_subscription_url(UserInterface $account): ?Url {
+  if (!$account->hasField('field_user_chargebee_id')) {
+    return NULL;
+  }
+  $subscription_id = trim((string) $account->get('field_user_chargebee_id')->value);
+  if ($subscription_id === '') {
+    return NULL;
+  }
+
+  $config = \Drupal::config('access_control_api_logger.settings');
+  $base = trim((string) $config->get('chargebee_dashboard_base'));
+  if ($base === '') {
+    $base = 'https://makehaven.chargebee.com';
+  }
+  $base = rtrim($base, '/');
+
+  return Url::fromUri($base . '/d/subscriptions/' . $subscription_id, [
+    'attributes' => [
+      'target' => '_blank',
+      'rel' => 'noopener',
+    ],
+  ]);
 }

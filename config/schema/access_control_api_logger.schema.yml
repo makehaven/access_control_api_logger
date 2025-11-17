@@ -38,3 +38,6 @@ access_control_api_logger.settings:
     fallback_include_user_email:
       type: boolean
       label: 'Include email in fallback export'
+    chargebee_dashboard_base:
+      type: string
+      label: 'Chargebee dashboard base URL'

@@ -13,3 +13,8 @@ services:
       - '@config.factory'
       - '@logger.factory'
       - '@datetime.time'
+  access_control_api_logger.access_status_evaluator:
+    class: Drupal\access_control_api_logger\Service\AccessStatusEvaluator
+    arguments:
+      - '@string_translation'
+      - '@entity_type.manager'
