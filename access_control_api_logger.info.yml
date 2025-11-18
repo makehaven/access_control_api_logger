@@ -13,4 +13,3 @@ dependencies:
   - drupal:profile
   - eck:eck
   - drupal:field_permissions
-  - makerspace_user_links:makerspace_user_links
