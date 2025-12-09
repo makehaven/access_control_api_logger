@@ -228,7 +228,10 @@ class AccessControlApiLoggerController extends ControllerBase {
     }
 
     $check_user_has_permission_enabled = $config->get('check_user_has_permission') ?? TRUE;
-    if ($check_user_has_permission_enabled && $user && $badge) {
+    // Users with the 'services' role bypass the explicit badge request check.
+    $bypass_permission_check = $user && $user->hasRole('services');
+
+    if ($check_user_has_permission_enabled && $user && $badge && !$bypass_permission_check) {
         $query = \Drupal::entityQuery('node')
             ->condition('type', 'badge_request')
             ->condition('field_member_to_badge', $user->id())

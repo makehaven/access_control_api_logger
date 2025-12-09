@@ -10,7 +10,7 @@ id: user.user.field_card_serial_number
 field_name: field_card_serial_number
 entity_type: user
 bundle: user
-label: 'Card Serial Number (NOT IMPLEMENTED NOW)'
+label: 'Card Serial Number'
 description: ''
 required: false
 translatable: false
