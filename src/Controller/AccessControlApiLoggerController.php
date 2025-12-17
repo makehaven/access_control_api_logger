@@ -9,6 +9,7 @@ use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Drupal\image\Entity\ImageStyle;
 
 /**
  * Controller for Access Control API Logger.
@@ -310,7 +311,6 @@ class AccessControlApiLoggerController extends ControllerBase {
    * Helper function to find a user by serial number.
    */
   protected function getUserBySerial($serial) {
-    // ... (getUserBySerial method remains the same) ...
     $user_query = \Drupal::entityQuery('user')
       ->condition('field_card_serial_number', $serial)
       ->accessCheck(FALSE);
@@ -343,7 +343,6 @@ class AccessControlApiLoggerController extends ControllerBase {
    * Lists all active permissions.
    */
   public function listAllPermissions() {
-    // ... (listAllPermissions method remains the same) ...
     $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties(['vid' => 'badges']);
     if (empty($terms)) {
       return new JsonResponse(['error' => 'No permissions found.'], 404);
@@ -362,34 +361,80 @@ class AccessControlApiLoggerController extends ControllerBase {
    * Gets user info by serial number.
    */
   public function getUserInfoBySerial($serial) {
-    // ... (getUserInfoBySerial method remains the same) ...
     $user = $this->getUserBySerial($serial);
     if (!$user) {
       return new JsonResponse(['error' => 'User not found for serial.'], 404);
     }
+
+    $photo_url = $this->getUserPhotoUrl($user);
+
     return new JsonResponse([
-      'first_name' => $user->get('field_first_name')->value,
-      'last_name' => $user->get('field_last_name')->value,
-      'uuid' => $user->uuid->value,
-      'access' => $user->get('status')->value ? 'Active' : 'Inactive',
+      [
+        'first_name' => $user->get('field_first_name')->value,
+        'last_name' => $user->get('field_last_name')->value,
+        'uuid' => $user->uuid->value,
+        'access' => in_array('member', $user->getRoles()) ? 'Member' : ($user->get('status')->value ? 'Active' : 'Inactive'),
+        'photo' => $photo_url,
+      ]
     ]);
+  }
+
+  /**
+   * Helper to get user photo URL from User entity or Main Profile.
+   */
+  protected function getUserPhotoUrl(User $user) {
+    $photo_url = NULL;
+    $image_style = ImageStyle::load('large');
+    if (!$image_style) {
+      return NULL;
+    }
+
+    // Check Profile entity 'field_member_photo' first.
+    $profiles = \Drupal::entityTypeManager()->getStorage('profile')->loadByProperties([
+      'uid' => $user->id(),
+      'type' => 'main',
+      'status' => 1,
+    ]);
+    $profile = reset($profiles);
+
+    if ($profile && $profile->hasField('field_member_photo') && !$profile->get('field_member_photo')->isEmpty()) {
+      $file = $profile->get('field_member_photo')->entity;
+      if ($file) {
+        return $image_style->buildUrl($file->getFileUri());
+      }
+    }
+
+    // Fallback to User entity 'user_picture'.
+    if ($user->hasField('user_picture') && !$user->get('user_picture')->isEmpty()) {
+      $file = $user->get('user_picture')->entity;
+      if ($file) {
+        return $image_style->buildUrl($file->getFileUri());
+      }
+    }
+
+    return NULL;
   }
 
   /**
    * Gets user info by UUID.
    */
   public function getUserInfoByUuid($uuid) {
-    // ... (getUserInfoByUuid method remains the same) ...
     $users = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties(['uuid' => $uuid]);
     $user = reset($users);
     if (!$user) {
       return new JsonResponse(['error' => 'User not found for UUID.'], 404);
     }
+
+    $photo_url = $this->getUserPhotoUrl($user);
+
     return new JsonResponse([
-      'first_name' => $user->get('field_first_name')->value,
-      'last_name' => $user->get('field_last_name')->value,
-      'uuid' => $user->uuid->value,
-      'access' => $user->get('status')->value ? 'Active' : 'Inactive',
+      [
+        'first_name' => $user->get('field_first_name')->value,
+        'last_name' => $user->get('field_last_name')->value,
+        'uuid' => $user->uuid->value,
+        'access' => in_array('member', $user->getRoles()) ? 'Member' : ($user->get('status')->value ? 'Active' : 'Inactive'),
+        'photo' => $photo_url,
+      ]
     ]);
   }
 }
