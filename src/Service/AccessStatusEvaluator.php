@@ -203,17 +203,17 @@ class AccessStatusEvaluator {
       return FALSE;
     }
 
-    $query = $this->entityTypeManager->getStorage('node')->getQuery();
-    $query->condition('type', 'badge_request')
+    $query = $this->entityTypeManager->getStorage('node')->getQuery()
+      ->condition('type', 'badge_request')
       ->condition('field_badge_requested', $term_id)
-      ->condition('field_badge_status.value', 'active')
-      ->accessCheck(FALSE)
-      ->range(0, 1);
+      ->condition('field_badge_status.value', 'active');
 
     $user_group = $query->orConditionGroup()
       ->condition('field_member_to_badge', $account->id());
     $user_group->condition('field_member_badge_reference', $account->id());
     $query->condition($user_group);
+    $query->range(0, 1);
+    $query->accessCheck(FALSE);
     $nids = $query->execute();
     return !empty($nids);
   }
@@ -226,11 +226,11 @@ class AccessStatusEvaluator {
       return $this->badgeTermCache[$permission_id];
     }
 
-    $query = $this->entityTypeManager->getStorage('taxonomy_term')->getQuery();
-    $query->condition('vid', 'badges')
-      ->condition('field_badge_text_id', $permission_id)
-      ->accessCheck(FALSE)
-      ->range(0, 1);
+    $query = $this->entityTypeManager->getStorage('taxonomy_term')->getQuery()
+      ->condition('vid', 'badges')
+      ->condition('field_badge_text_id', $permission_id);
+    $query->range(0, 1);
+    $query->accessCheck(FALSE);
     $tids = $query->execute();
     $tid = $tids ? (int) reset($tids) : NULL;
     $this->badgeTermCache[$permission_id] = $tid;
