@@ -1,7 +1,7 @@
 name: 'Access Control API and Logger'
 type: module
 description: 'Creates API endpoint and logs access control requests.'
-package: Custom
+package: Makerspace
 core_version_requirement: ^10 || ^11
 dependencies:
   - drupal:node
@@ -13,3 +13,4 @@ dependencies:
   - drupal:profile
   - eck:eck
   - drupal:field_permissions
+configure: access_control_api_logger.settings_form
